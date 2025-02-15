@@ -1,0 +1,118 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+pip-wheel-metadata/
+*.egg-info/
+poetry.lock
+dist/
+build/
+
+# Poetry cache
+poetry.lock
+poetry.toml
+.poetry/
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# OS-specific (macOS)
+.DS_Store
+.AppleDouble
+.LSOverride
+*.icloud
+
+# OS-specific (Windows)
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Logs
+*.log
+logs/
+*.out
+*.err
+
+# Test coverage / reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.*
+*.cover
+.cache/
+nosetests.xml
+coverage.xml
+*.pytest_cache
+.pytest_cache/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# MyPy
+.mypy_cache/
+
+# Pyright
+.pyright/
+
+# Pylint
+.pylint.d/
+
+# ctags
+tags
+TAGS
+
+# Editor backup files
+*.swp
+*.swo
+*~
+*#
+.#*
+
+# Binary artifacts
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.o
+*.a
+*.lib
+*.pdb
+
+# Security
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.der
+*.env
+.env.local
+.env.test
+.env.production
+
+# Containers
+docker-compose.override.yml
+.Dockerfile.swp
+.Dockerfile.bak
+*.container
+
+# Misc
+node_modules/
+npm-debug.log*
+yarn-error.log
+pnpm-debug.log
