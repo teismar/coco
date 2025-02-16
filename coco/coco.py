@@ -201,8 +201,10 @@ def extract_images(
         console.print("[bold yellow]No images found in the Compose file.[/bold yellow]")
         raise typer.Exit()
 
+    unique_images = list(dict.fromkeys(images))
+
     with output_file.open("w") as file:
-        file.write("\n".join(images))
+        file.write("\n".join(unique_images))
 
     console.print(f"[bold green]Image names extracted to {output_file}[/bold green]")
 
