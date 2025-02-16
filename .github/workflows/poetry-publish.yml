@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Configure Git safe directory
+        run: git config --global --add safe.directory /github/workspace
       - name: Build and publish to pypi
         uses: JRubics/poetry-publish@v2.1
         with:
