@@ -1,13 +1,15 @@
 # coco/utils.py
 
 import random
+from importlib import resources
 from pathlib import Path
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-from importlib import resources
 
 console = Console()
+
 
 def find_compose_file() -> Path | None:
     """
@@ -28,8 +30,10 @@ def find_compose_file() -> Path | None:
             return potential_path
     return None
 
+
 def load_logo() -> str:
     return resources.read_text("coco.assets", "logo.txt")
+
 
 def display_logo():
     """
@@ -38,19 +42,21 @@ def display_logo():
     """
     console.print(load_logo())
 
+
 def load_fun_facts() -> list[str]:
     content = resources.read_text("coco.assets", "funfacts.txt")
     return [line.strip() for line in content.splitlines() if line.strip()]
+
 
 def display_random_fun_fact(facts):
     """
     Display a random fun fact in a panel.
     """
     if facts:
-        fact = random.choice(facts)
+        fact = random.choice(facts)  # noqa: S311
         panel = Panel(
             Text(fact, justify="center", style="italic cyan"),
             title="Did You Know?",
-            border_style="cyan"
+            border_style="cyan",
         )
         console.print(panel)

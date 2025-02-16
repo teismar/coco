@@ -25,6 +25,12 @@ coco = "coco.coco:app"
 [tool.poetry.requires-plugins]
 poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+isort = "^6.0.0"
+ruff = "^0.9.6"
+poethepoet = "^0.32.2"
+
 [tool.poetry-dynamic-versioning]
 enable = true
 vcs = "git"
@@ -35,3 +41,39 @@ format = "{base}"
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "W", "R", "C", "N", "S", "T"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+
+[tool.poe.tasks]
+lint_black = "black . --check"
+lint_isort = "isort . --check"
+lint_ruff = "ruff check"
+lint = ["lint_black", "lint_isort", "lint_ruff"]
+
+format_black = "black ."
+format_isort = "isort ."
+format_ruff = "ruff check --fix"
+format = [ "format_black", "format_isort", "format_ruff"]
+
+all = [ "format", "lint"]

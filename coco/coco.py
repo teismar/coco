@@ -7,24 +7,37 @@ Commands:
     pull-images:    Pull Docker images concurrently and display their status.
 """
 
-import typer
+import concurrent.futures
+import shutil
 import subprocess
 import time
 from pathlib import Path
-import concurrent.futures
+
+import typer
 from rich.console import Console
-from rich.table import Table
 from rich.live import Live
 from rich.panel import Panel
+from rich.table import Table
 from rich.traceback import install
 from typer import Context
-from coco.utils import display_logo, load_fun_facts, display_random_fun_fact, find_compose_file
+
+from coco.utils import display_logo, display_random_fun_fact, load_fun_facts
 
 # Install Rich tracebacks for prettier error messages.
 install()
 
 app = typer.Typer()
 console = Console()
+
+
+def get_docker_executable() -> str:
+    """
+    Locate the docker executable using shutil.which.
+    """
+    docker_exe = shutil.which("docker")
+    if docker_exe is None:
+        raise RuntimeError("Docker executable not found in PATH.")
+    return docker_exe
 
 
 def pull_image(image: str) -> subprocess.CompletedProcess:
@@ -37,12 +50,39 @@ def pull_image(image: str) -> subprocess.CompletedProcess:
     Returns:
         subprocess.CompletedProcess: The result of running the docker pull command.
     """
-    result = subprocess.run(
-        ["docker", "pull", image],
+    docker_exe = get_docker_executable()
+    # nosec: Using a trusted executable and input.
+    return subprocess.run(  # noqa: S603
+        [docker_exe, "pull", image],
         capture_output=True,
         text=True,
     )
-    return result
+
+
+def build_status_table(tasks: dict) -> Table:
+    """
+    Build the overview table for Docker image pull statuses.
+
+    Args:
+        tasks (dict): Dictionary mapping image names to their task data.
+
+    Returns:
+        Table: A Rich Table with the status of each image pull.
+    """
+    table = Table(title="Docker Pull Overview")
+    table.add_column("Index", justify="right")
+    table.add_column("Image")
+    table.add_column("Status")
+    for i, (img, data) in enumerate(tasks.items(), start=1):
+        status = data["status"]
+        if status == "Running":
+            status_colored = "[bold orange1]Running[/bold orange1]"
+        elif status == "Success":
+            status_colored = "[green]Success[/green]"
+        else:
+            status_colored = "[red]Failed[/red]"
+        table.add_row(str(i), img, status_colored)
+    return table
 
 
 @app.callback(invoke_without_command=True)
@@ -62,9 +102,9 @@ def main(ctx: Context):
 
 @app.command("pull-images")
 def pull_images(
-        images_file: Path = typer.Argument(
-            "images.txt", help="File containing list of images to pull"
-        )
+    images_file: Path = typer.Argument(
+        "images.txt", help="File containing list of images to pull"
+    )
 ):
     """
     Pull Docker images concurrently and display a live overview of their statuses.
@@ -99,58 +139,36 @@ def pull_images(
                     if data["future"].done() and data["status"] == "Running":
                         ret = data["future"].result().returncode
                         data["status"] = "Success" if ret == 0 else "Failed"
-                # Build the overview table.
-                table = Table(title="Docker Pull Overview")
-                table.add_column("Index", justify="right")
-                table.add_column("Image")
-                table.add_column("Status")
-                for i, (img, data) in enumerate(tasks.items(), start=1):
-                    status = data["status"]
-                    if status == "Running":
-                        status_colored = "[bold orange1]Running[/bold orange1]"
-                    elif status == "Success":
-                        status_colored = "[green]Success[/green]"
-                    else:
-                        status_colored = "[red]Failed[/red]"
-                    table.add_row(str(i), img, status_colored)
-                running = sum(1 for data in tasks.values() if data["status"] == "Running")
+                running = sum(
+                    1 for data in tasks.values() if data["status"] == "Running"
+                )
                 header = (
                     f"[bold orange1]{running} image(s) still running[/bold orange1]"
                     if running
                     else "[bold green]All pulls finished[/bold green]"
                 )
-                live.update(Panel.fit(table, title=header))
+                live.update(Panel.fit(build_status_table(tasks), title=header))
                 time.sleep(0.2)
             # Final update for any remaining tasks.
             for image, data in tasks.items():
                 if data["status"] == "Running":
                     ret = data["future"].result().returncode
                     data["status"] = "Success" if ret == 0 else "Failed"
-            table = Table(title="Docker Pull Overview")
-            table.add_column("Index", justify="right")
-            table.add_column("Image")
-            table.add_column("Status")
-            for i, (img, data) in enumerate(tasks.items(), start=1):
-                status = data["status"]
-                if status == "Running":
-                    status_colored = "[bold orange1]Running[/bold orange1]"
-                elif status == "Success":
-                    status_colored = "[green]Success[/green]"
-                else:
-                    status_colored = "[red]Failed[/red]"
-                table.add_row(str(i), img, status_colored)
-            live.update(Panel.fit(table, title="[bold green]All pulls finished[/bold green]"))
+            live.update(
+                Panel.fit(
+                    build_status_table(tasks),
+                    title="[bold green]All pulls finished[/bold green]",
+                )
+            )
             time.sleep(1)
 
 
 @app.command("extract-images")
 def extract_images(
-        compose_file: Path = typer.Argument(
-            None, help="Path to the Docker Compose file"
-        ),
-        output_file: Path = typer.Argument(
-            "images.txt", help="Output file to save image names"
-        )
+    compose_file: Path = typer.Argument(None, help="Path to the Docker Compose file"),
+    output_file: Path = typer.Argument(
+        "images.txt", help="Output file to save image names"
+    ),
 ):
     """
     Extract Docker image names from a Docker Compose file.
@@ -168,34 +186,47 @@ def extract_images(
 
     if compose_file is None:
         # Attempt to locate a standard Docker Compose file in the current directory.
-        from coco.utils import find_compose_file  # Import here if not globally available
+        from coco.utils import (  # Import here if not globally available
+            find_compose_file,
+        )
+
         compose_file = find_compose_file()
         if compose_file is None:
-            console.print("[bold red]No Docker Compose file found in the current directory.[/bold red]")
+            console.print(
+                "[bold red]No Docker Compose file found in the current directory.[/bold red]"
+            )
             raise typer.Exit(code=1)
-        else:
-            console.print(f"[bold yellow]No compose file specified. Using {compose_file}[/bold yellow]")
+        console.print(
+            f"[bold yellow]No compose file specified. Using {compose_file}[/bold yellow]"
+        )
 
+    docker_exe = get_docker_executable()
     with console.status("[bold green]Resolving Docker Compose file...[/bold green]"):
-        result = subprocess.run(
-            ["docker", "compose", "-f", str(compose_file), "convert"],
+        # nosec: Executable and input are trusted.
+        result = subprocess.run(  # noqa: S603
+            [docker_exe, "compose", "-f", str(compose_file), "convert"],
             capture_output=True,
             text=True,
         )
 
     if result.returncode != 0:
-        console.print(f"[bold red]Error running 'docker compose convert': {result.stderr}[/bold red]")
+        console.print(
+            f"[bold red]Error running 'docker compose convert': {result.stderr}[/bold red]"
+        )
         raise typer.Exit(code=1)
 
     try:
         import yaml
+
         compose_data = yaml.safe_load(result.stdout)
     except yaml.YAMLError as e:
         console.print(f"[bold red]Error parsing YAML: {e}[/bold red]")
         raise typer.Exit(code=1)
 
     services = compose_data.get("services", {})
-    images = [service.get("image") for service in services.values() if "image" in service]
+    images = [
+        service.get("image") for service in services.values() if "image" in service
+    ]
 
     if not images:
         console.print("[bold yellow]No images found in the Compose file.[/bold yellow]")
