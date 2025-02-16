@@ -5,6 +5,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from importlib import resources
 
 console = Console()
 
@@ -27,35 +28,19 @@ def find_compose_file() -> Path | None:
             return potential_path
     return None
 
+def load_logo() -> str:
+    return resources.read_text("coco.assets", "logo.txt")
+
 def display_logo():
     """
     Display the CLI logo.
     If the logo file is empty or missing, log an error message.
     """
-    logo_path = Path(__file__).parent.parent / "assets" / "logo.txt"
-    try:
-        with open(logo_path, "r") as file:
-            logo = file.read().strip()
-            if logo:
-                console.print(logo)
-            else:
-                console.print("[bold red]Logo file is empty![/bold red]")
-    except FileNotFoundError:
-        console.print("[bold red]Logo file not found![/bold red]")
+    console.print(load_logo())
 
-def load_fun_facts():
-    """
-    Load fun facts from assets/funfacts.txt.
-    Returns a list of fun facts if the file exists; otherwise, logs an error.
-    """
-    facts_path = Path(__file__).parent.parent / "assets" / "funfacts.txt"
-    try:
-        with open(facts_path, "r") as file:
-            facts = [line.strip() for line in file if line.strip()]
-        return facts
-    except FileNotFoundError:
-        console.print("[bold red]Fun facts file not found![/bold red]")
-        return []
+def load_fun_facts() -> list[str]:
+    content = resources.read_text("coco.assets", "funfacts.txt")
+    return [line.strip() for line in content.splitlines() if line.strip()]
 
 def display_random_fun_fact(facts):
     """
