@@ -45,10 +45,10 @@ def display_logo():
 
 def load_fun_facts():
     """
-    Load fun facts from data/funfacts.txt.
+    Load fun facts from assets/funfacts.txt.
     Returns a list of fun facts if the file exists; otherwise, logs an error.
     """
-    facts_path = Path(__file__).parent.parent / "data" / "funfacts.txt"
+    facts_path = Path(__file__).parent.parent / "assets" / "funfacts.txt"
     try:
         with open(facts_path, "r") as file:
             facts = [line.strip() for line in file if line.strip()]

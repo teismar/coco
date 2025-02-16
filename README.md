@@ -15,7 +15,7 @@ CoCo is a simple, open-source CLI tool that helps you manage Docker Compose task
 ### PyPI
 
 ```bash
-pip install coco-cli
+pip install coco-docker
 ```
 
 ### From Source

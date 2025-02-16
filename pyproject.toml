@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "coco"
-version = "0.1.0"
+name = "coco-docker"
+version = "0.1.1"
 description = "CoCo: Your Container Companion — A helpful CLI for Docker tasks"
 authors = ["teismar <eismartim@gmail.com>"]
 readme = "README.md"
