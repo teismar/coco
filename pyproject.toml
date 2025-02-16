@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "coco-docker"
-version = "0.1.1"
+version = "0.0.0"  # This version will be overridden by the plugin
 description = "CoCo: Your Container Companion — A helpful CLI for Docker tasks"
 authors = ["teismar <eismartim@gmail.com>"]
 readme = "README.md"
@@ -10,7 +10,7 @@ packages = [
 
 include = [
     "assets/logo.txt",
-    "data/funfacts.txt"
+    "assets/funfacts.txt"
 ]
 
 [tool.poetry.dependencies]
@@ -21,6 +21,12 @@ pyyaml = "^6.0.2"
 
 [tool.poetry.scripts]
 coco = "coco.coco:app"
+
+[tool.poetry.group.dev.dependencies]
+poetry-dynamic-versioning = "^1.7.1"
+
+[tool.poetry-dynamic-versioning]
+enable = true
 
 [build-system]
 requires = ["poetry-core"]
